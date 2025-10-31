@@ -146,7 +146,7 @@ export function Dashboard() {
         </div>
         
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {allTasks.length === 0 ? (
+          {tasksData.length === 0 && exampleTasks.length === 0 ? (
             <div className="h-[240px] flex items-center justify-center">
               <div className="text-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

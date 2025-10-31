@@ -96,8 +96,8 @@ function HintHotspot({ elementId, label }: { elementId: string; label?: string }
       }}
     >
       {/* Pulsing indicator */}
-      <span className="absolute inline-flex rounded-full bg-primary/60 opacity-75 animate-ping" style={{ width: 24, height: 24 }} />
-      <span className="relative inline-flex rounded-full bg-primary shadow-md border-2 border-white" style={{ width: 24, height: 24 }}>
+      <span className="absolute inline-flex rounded-full bg-blue-500/60 opacity-75 animate-ping" style={{ width: 24, height: 24 }} />
+      <span className="relative inline-flex rounded-full bg-blue-500 shadow-md border-2 border-white" style={{ width: 24, height: 24 }}>
         <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">!</span>
       </span>
 

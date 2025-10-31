@@ -16,15 +16,7 @@ const teamSteps: TeamStep[] = [
   {
     title: "Invite Key Users",
     content:
-      "Welcome! Let's invite your team members. This will help you collaborate on decisions and manage your family office workspace together.",
-    elementId: null,
-    position: "center",
-    canSkip: false,
-  },
-  {
-    title: "Invite Your First Team Member",
-    content:
-      "Click the 'Invite first user' button to add colleagues to your workspace. Team members can collaborate on decisions and access shared documents.",
+      "Welcome! Let's invite your team members. Click the 'Invite first user' button to add colleagues to your workspace. Team members can collaborate on decisions and access shared documents.",
     elementId: "btn-invite-first",
     position: "right",
     canSkip: true,
@@ -400,8 +392,8 @@ function WalkthroughHotspot({ elementId }: { elementId: string }) {
         left: `${position.left}px`,
       }}
     >
-      <span className="absolute inline-flex rounded-full bg-primary/60 opacity-75 animate-ping" style={{ width: 24, height: 24 }} />
-      <span className="relative inline-flex rounded-full bg-primary shadow-md border-2 border-white" style={{ width: 24, height: 24 }}>
+      <span className="absolute inline-flex rounded-full bg-blue-500/60 opacity-75 animate-ping" style={{ width: 24, height: 24 }} />
+      <span className="relative inline-flex rounded-full bg-blue-500 shadow-md border-2 border-white" style={{ width: 24, height: 24 }}>
         <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">!</span>
       </span>
     </div>

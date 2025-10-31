@@ -180,38 +180,122 @@ export function OrganizationWalkthrough({ onClose, onStepComplete, onComplete }:
     const rect = element.getBoundingClientRect()
     const tooltipRect = tooltipRef.current.getBoundingClientRect()
 
-    // Tooltip positioning without spotlight
+    // Check if element is inside a modal
+    let isInModal = false
+    let modalContentRect: DOMRect | null = null
+    
+    // Find the modal backdrop first (fixed inset-0)
+    let parent = element.parentElement
+    let modalBackdrop: HTMLElement | null = null
+    
+    while (parent && parent !== document.body) {
+      const classes = parent.className
+      if (typeof classes === "string" && (
+        classes.includes("fixed") && 
+        (classes.includes("inset-0") || classes.includes("bg-black/50") || classes.includes("bg-black/60"))
+      )) {
+        modalBackdrop = parent
+        isInModal = true
+        break
+      }
+      parent = parent.parentElement
+    }
+    
+    // If we found a modal backdrop, find the modal content container inside it
+    if (isInModal && modalBackdrop) {
+      // Look for the modal content (usually a direct child with rounded corners and shadow)
+      const modalContent = modalBackdrop.querySelector('[class*="rounded"], [class*="shadow"], [class*="max-w"]')
+      if (modalContent) {
+        modalContentRect = modalContent.getBoundingClientRect()
+      } else {
+        // Fallback: use the backdrop rect
+        modalContentRect = modalBackdrop.getBoundingClientRect()
+      }
+    }
+
+    // Tooltip positioning
     let tooltipPos: React.CSSProperties = {}
 
-    switch (step.position) {
-      case "bottom":
+    // If element is inside a modal, position tooltip outside the modal
+    if (isInModal && modalContentRect) {
+      const margin = 24
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      const spaceOnRight = viewportWidth - modalContentRect.right
+      const tooltipWidth = tooltipRect.width || 400
+      const tooltipHeight = tooltipRect.height || 300
+
+      // If there's enough space on the right, put tooltip there
+      if (spaceOnRight >= tooltipWidth + margin) {
         tooltipPos = {
-          left: `${rect.left + rect.width / 2}px`,
-          top: `${rect.bottom + 24}px`,
-          transform: "translateX(-50%)",
+          left: `${modalContentRect.right + margin}px`,
+          top: `${Math.max(24, modalContentRect.top + 50)}px`,
+          transform: "none",
+          maxWidth: `${Math.min(tooltipWidth, 400)}px`,
         }
-        break
-      case "top":
-        tooltipPos = {
-          left: `${rect.left + rect.width / 2}px`,
-          top: `${rect.top - tooltipRect.height - 24}px`,
-          transform: "translateX(-50%)",
+      } else {
+        // If not enough space on right, position on left side
+        const spaceOnLeft = modalContentRect.left
+        if (spaceOnLeft >= tooltipWidth + margin) {
+          tooltipPos = {
+            right: `${viewportWidth - modalContentRect.left + margin}px`,
+            top: `${Math.max(24, modalContentRect.top + 50)}px`,
+            transform: "none",
+            maxWidth: `${Math.min(tooltipWidth, 400)}px`,
+          }
+        } else {
+          // Fallback: position below the modal
+          const spaceBelow = viewportHeight - modalContentRect.bottom
+          if (spaceBelow >= tooltipHeight + margin) {
+            tooltipPos = {
+              left: `${modalContentRect.left + modalContentRect.width / 2}px`,
+              top: `${modalContentRect.bottom + margin}px`,
+              transform: "translateX(-50%)",
+              maxWidth: `${Math.min(tooltipWidth, modalContentRect.width)}px`,
+            }
+          } else {
+            // Last resort: position above the modal
+            tooltipPos = {
+              left: `${modalContentRect.left + modalContentRect.width / 2}px`,
+              bottom: `${viewportHeight - modalContentRect.top + margin}px`,
+              transform: "translateX(-50%)",
+              maxWidth: `${Math.min(tooltipWidth, modalContentRect.width)}px`,
+            }
+          }
         }
-        break
-      case "left":
-        tooltipPos = {
-          left: `${rect.left - tooltipRect.width - 24}px`,
-          top: `${rect.top + rect.height / 2}px`,
-          transform: "translateY(-50%)",
-        }
-        break
-      case "right":
-        tooltipPos = {
-          left: `${rect.right + 24}px`,
-          top: `${rect.top + rect.height / 2}px`,
-          transform: "translateY(-50%)",
-        }
-        break
+      }
+    } else {
+      // Normal positioning if not in modal
+      switch (step.position) {
+        case "bottom":
+          tooltipPos = {
+            left: `${rect.left + rect.width / 2}px`,
+            top: `${rect.bottom + 24}px`,
+            transform: "translateX(-50%)",
+          }
+          break
+        case "top":
+          tooltipPos = {
+            left: `${rect.left + rect.width / 2}px`,
+            top: `${rect.top - tooltipRect.height - 24}px`,
+            transform: "translateX(-50%)",
+          }
+          break
+        case "left":
+          tooltipPos = {
+            left: `${rect.left - tooltipRect.width - 24}px`,
+            top: `${rect.top + rect.height / 2}px`,
+            transform: "translateY(-50%)",
+          }
+          break
+        case "right":
+          tooltipPos = {
+            left: `${rect.right + 24}px`,
+            top: `${rect.top + rect.height / 2}px`,
+            transform: "translateY(-50%)",
+          }
+          break
+      }
     }
 
     setTooltipStyle(tooltipPos)
@@ -369,8 +453,8 @@ function WalkthroughHotspot({ elementId }: { elementId: string }) {
         left: `${position.left}px`,
       }}
     >
-      <span className="absolute inline-flex rounded-full bg-primary/60 opacity-75 animate-ping" style={{ width: 24, height: 24 }} />
-      <span className="relative inline-flex rounded-full bg-primary shadow-md border-2 border-white" style={{ width: 24, height: 24 }}>
+      <span className="absolute inline-flex rounded-full bg-blue-500/60 opacity-75 animate-ping" style={{ width: 24, height: 24 }} />
+      <span className="relative inline-flex rounded-full bg-blue-500 shadow-md border-2 border-white" style={{ width: 24, height: 24 }}>
         <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">!</span>
       </span>
     </div>
