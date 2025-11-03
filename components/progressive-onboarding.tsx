@@ -6,20 +6,20 @@ import { CheckCircle2, Sparkles, ArrowRight, X, Lightbulb } from "lucide-react"
 
 // Контекстні підказки для кожного модуля
 const moduleTooltips: Record<string, { title: string; description: string; action?: string }> = {
-  "org-setup": {
-    title: "Налаштуйте вашу організацію",
-    description: "Встановіть назву, часовий пояс, валюту та інші базові налаштування. Це займе 2 хвилини.",
-    action: "Відкрити налаштування",
+  "setup-domains": {
+    title: "Створіть базові категорії",
+    description: "Створіть категорії в доменах, десижинах та тасках для організації вашого робочого простору.",
+    action: "Відкрити каталог",
+  },
+  "create-teams": {
+    title: "Створіть команди",
+    description: "Створіть структуру команд для організації ваших членів команди та призначення дозволів.",
+    action: "Створити команди",
   },
   "add-team-member": {
-    title: "Додайте першого члена команди",
-    description: "Запросіть ключових користувачів: CEO, CFO, менеджера операцій. Ви можете додати більше пізніше.",
+    title: "Запросіть користувачів",
+    description: "Запросіть ключових користувачів: CEO, CFO, менеджера операцій та додайте їх до ваших команд.",
     action: "Запросити команду",
-  },
-  "setup-domains": {
-    title: "Створіть базові домени",
-    description: "Домени допомагають організувати ваші рішення. Почніть з основних: Properties, Vehicles, Financial.",
-    action: "Відкрити каталог",
   },
   "add-demo-items": {
     title: "Ваше перше рішення вже створено!",
@@ -117,11 +117,11 @@ export function ProgressiveOnboarding({ userRole }: ProgressiveOnboardingProps) 
     
     // Навігація залежно від модуля
     const moduleRoutes: Record<string, string> = {
-      "org-setup": "/settings",
-      "add-team-member": "/team",
       "setup-domains": "/catalog",
+      "create-teams": "/team",
       "add-demo-items": "/decisions",
       "connect-integrations": "/resources",
+      "add-team-member": "/team",
       "configure-compliance": "/compliance",
     }
 

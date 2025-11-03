@@ -30,7 +30,7 @@ export default function TeamPage() {
       }
     }
 
-    if (activeModule === "add-team-member" && shouldShowWalkthrough) {
+    if ((activeModule === "add-team-member" || activeModule === "create-teams") && shouldShowWalkthrough) {
       // Small delay for page to load
       setTimeout(() => {
         setShowWalkthrough(true)

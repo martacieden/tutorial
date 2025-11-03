@@ -236,10 +236,11 @@
 
 /* Виділення елементів під час walkthrough */
 .walkthrough-highlight {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: 3px solid hsl(var(--primary));
+  outline-offset: 4px;
+  border-radius: 6px;
   transition: outline 0.2s ease;
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2), 0 0 0 4px hsl(var(--primary) / 0.1);
 }
 
 /* Hotspot Styles */

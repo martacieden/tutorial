@@ -15,6 +15,7 @@ import { AIAssistantButton } from "@/components/ai-assistant-button"
 import { ModuleCompletionModal } from "@/components/module-completion-modal"
 import { OnboardingTypeSelector } from "@/components/onboarding-type-selector"
 import { LearnByDoingFeedback } from "@/components/learn-by-doing-feedback"
+import { UserHomePageWalkthrough } from "@/components/user-homepage-walkthrough"
 
 export default function Home() {
   const [showRoleSelector, setShowRoleSelector] = useState(false)
@@ -31,6 +32,7 @@ export default function Home() {
   const [showWelcome, setShowWelcome] = useState(false)
   const [showSurvey, setShowSurvey] = useState(false)
   const [showLearnFeedback, setShowLearnFeedback] = useState<any>(null)
+  const [showUserWalkthrough, setShowUserWalkthrough] = useState(false)
 
   // Check for module completion modal
   useEffect(() => {
@@ -49,17 +51,35 @@ export default function Home() {
           if (progress[moduleId] === true) {
             // Get module info
             const moduleInfo: Record<string, { title: string; nextId?: string; nextTitle?: string; nextRoute?: string }> = {
-              "org-setup": {
-                title: "Create an organization",
+              "setup-domains": {
+                title: "Create base category",
+                nextId: "create-teams",
+                nextTitle: "Create teams",
+                nextRoute: "/team",
+              },
+              "create-teams": {
+                title: "Create teams",
+                nextId: "add-demo-items",
+                nextTitle: "Add demo items",
+                nextRoute: "/decisions",
+              },
+              "add-demo-items": {
+                title: "Add demo items",
+                nextId: "connect-integrations",
+                nextTitle: "Connect integrations",
+                nextRoute: "/resources",
+              },
+              "connect-integrations": {
+                title: "Connect integrations",
                 nextId: "add-team-member",
                 nextTitle: "Invite key users",
                 nextRoute: "/team",
               },
               "add-team-member": {
                 title: "Invite key users",
-                nextId: "setup-domains",
-                nextTitle: "Create base domains",
-                nextRoute: "/catalog",
+                nextId: "configure-compliance",
+                nextTitle: "Set up compliance tracking",
+                nextRoute: "/compliance",
               },
             }
             
@@ -170,16 +190,30 @@ export default function Home() {
       localStorage.setItem("way2b1_user_role", adminRole)
       localStorage.setItem("way2b1_user_goals", JSON.stringify(["Review and approve key decisions", "Monitor family portfolio performance"]))
     } else {
-      // advisor type
+      // advisor type - звичайний користувач
       setFlowType("advisor")
       localStorage.setItem("way2b1_flow_type", "advisor")
       const advisorRole = "investment-advisor"
       setUserRole(advisorRole)
       localStorage.setItem("way2b1_user_role", advisorRole)
       localStorage.setItem("way2b1_user_goals", JSON.stringify(["Create investment decisions", "Share documents with families"]))
+      
+      // Для звичайного користувача показуємо walkthrough замість welcome modal
+      const hasSeenWalkthrough = localStorage.getItem("way2b1_user_walkthrough_completed") === "true"
+      if (!hasSeenWalkthrough) {
+        setTimeout(() => {
+          setShowUserWalkthrough(true)
+        }, 500)
+      } else {
+        // Якщо вже бачив walkthrough, показуємо welcome modal
+        setTimeout(() => {
+          setShowWelcome(true)
+        }, 500)
+      }
+      return
     }
 
-    // Показуємо welcome modal після вибору типу onboarding
+    // Показуємо welcome modal після вибору типу onboarding (для admin)
     setTimeout(() => {
       setShowWelcome(true)
     }, 500)
@@ -231,6 +265,22 @@ export default function Home() {
     console.log("[v0] Tutorial skipped")
   }
 
+  const handleUserWalkthroughComplete = () => {
+    setShowUserWalkthrough(false)
+    localStorage.setItem("way2b1_user_walkthrough_completed", "true")
+    localStorage.setItem("way2b1_visited", "true")
+    setShowHotspots(true)
+    console.log("[v0] User walkthrough completed")
+  }
+
+  const handleUserWalkthroughSkip = () => {
+    setShowUserWalkthrough(false)
+    localStorage.setItem("way2b1_user_walkthrough_completed", "true")
+    localStorage.setItem("way2b1_visited", "true")
+    setShowHotspots(true)
+    console.log("[v0] User walkthrough skipped")
+  }
+
   const handleSurveySubmit = (feedback: { rating: "positive" | "negative"; comment: string }) => {
     console.log("[v0] Feedback submitted:", feedback)
     localStorage.setItem("way2b1_survey_shown", "true")
@@ -268,11 +318,25 @@ export default function Home() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar />
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto px-16 pb-6 pt-0">
           <Dashboard />
         </main>
       </div>
 
+
+      {showOnboardingTypeSelector && (
+        <OnboardingTypeSelector
+          onSelectType={handleOnboardingTypeSelect}
+          onClose={() => setShowOnboardingTypeSelector(false)}
+        />
+      )}
+
+      {showUserWalkthrough && (
+        <UserHomePageWalkthrough
+          onComplete={handleUserWalkthroughComplete}
+          onSkip={handleUserWalkthroughSkip}
+        />
+      )}
 
       {showRoleSelector && <RoleSelector onComplete={handleRoleComplete} />}
 

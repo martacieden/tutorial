@@ -66,6 +66,7 @@ export function Sidebar({ onStartTutorial, onOpenTutorialCenter, onLogoClick }: 
           <span className="text-xs">Projects</span>
         </Link>
         <Link
+          id="sidebar-decisions-link"
           href="/decisions"
           className={`flex flex-col items-center justify-center gap-1.5 px-2 py-3 rounded-lg transition-colors ${
             pathname === "/decisions"
@@ -77,8 +78,13 @@ export function Sidebar({ onStartTutorial, onOpenTutorialCenter, onLogoClick }: 
           <span className="text-xs">Decisions</span>
         </Link>
         <Link
-          href="#"
-          className="flex flex-col items-center justify-center gap-1.5 px-2 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+          id="sidebar-tasks-link"
+          href="/tasks"
+          className={`flex flex-col items-center justify-center gap-1.5 px-2 py-3 rounded-lg transition-colors ${
+            pathname === "/tasks"
+              ? "bg-blue-50 text-blue-600 font-medium"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
         >
           <CheckSquare className="w-5 h-5" />
           <span className="text-xs">Tasks</span>

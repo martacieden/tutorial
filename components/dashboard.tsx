@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ModuleChecklist } from "./module-checklist"
+import { TasksEmptyState } from "./tasks-empty-state"
+import { TasksTable } from "./tasks-table"
 import { ArrowRight, ClipboardList, Workflow, CheckCircle2, Circle, Info, Play } from "lucide-react"
 import { TaskHintModal } from "./task-hint-modal"
 
@@ -66,7 +68,7 @@ export function Dashboard() {
   const allTasks = [...exampleTasks, ...tasksData]
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="space-y-8 pb-8 pt-0">
       {/* Checklist */}
       <div>
         <ModuleChecklist />
@@ -145,123 +147,18 @@ export function Dashboard() {
           </Button>
         </div>
         
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {tasksData.length === 0 && exampleTasks.length === 0 ? (
-            <div className="h-[240px] flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ClipboardList className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-1">Add your first task</h3>
-                <p className="text-sm text-gray-600">Track action items and to-dos that need completion</p>
-              </div>
-            </div>
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden min-h-[240px]">
+          {tasksData.length === 0 ? (
+            <TasksEmptyState />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Organization</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Priority</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Due Date</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {allTasks.map((task, index) => {
-                    const isExampleTask = "description" in task
-                    const isCompleted = isExampleTask && task.status === "completed"
-                    
-                    return (
-                      <tr key={isExampleTask ? task.id : index} className={`hover:bg-gray-50 ${isCompleted ? "opacity-60" : ""}`}>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {isExampleTask ? (
-                            <button
-                              onClick={() => !isCompleted && handleTaskComplete(task.id)}
-                              className="flex items-center gap-2"
-                            >
-                              {isCompleted ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                              ) : (
-                                <Circle className="w-4 h-4 text-gray-400 hover:text-primary transition-colors" />
-                              )}
-                              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                isCompleted
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-blue-100 text-blue-700"
-                              }`}>
-                                {isCompleted ? "Completed" : "Pending"}
-                              </span>
-                            </button>
-                          ) : (
-                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                              {task.status}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {isExampleTask ? "Learning" : task.organization}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          <div>
-                            <div className={`flex items-center gap-2 ${isCompleted ? "line-through text-gray-500" : ""}`}>
-                              <span>{isExampleTask ? task.title : task.name}</span>
-                              {isExampleTask && !isCompleted && (
-                                <button
-                                  onClick={() => {
-                                    setSelectedTask(task as ExampleTask)
-                                    setShowHintModal(true)
-                                  }}
-                                  className="p-1 hover:bg-primary/10 rounded transition-colors text-primary"
-                                  title="View hints and instructions"
-                                >
-                                  <Info className="w-4 h-4" />
-                                </button>
-                              )}
-                              {isExampleTask && task.videoUrl && !isCompleted && (
-                                <button
-                                  onClick={() => {
-                                    setSelectedTask(task as ExampleTask)
-                                    setShowHintModal(true)
-                                  }}
-                                  className="p-1 hover:bg-primary/10 rounded transition-colors text-purple-600"
-                                  title="Watch video tutorial"
-                                >
-                                  <Play className="w-4 h-4" />
-                                </button>
-                              )}
-                            </div>
-                            {isExampleTask && task.description && (
-                              <div className="text-xs text-gray-500 mt-0.5">{task.description}</div>
-                            )}
-                            {isExampleTask && task.steps && task.steps.length > 0 && !isCompleted && (
-                              <div className="flex items-center gap-1 mt-1">
-                                {task.steps.slice(0, 3).map((step, idx) => (
-                                  <span key={idx} className="text-xs px-1.5 py-0.5 bg-secondary rounded text-muted-foreground">
-                                    {step}
-                                  </span>
-                                ))}
-                                {task.steps.length > 3 && (
-                                  <span className="text-xs text-muted-foreground">+{task.steps.length - 3} more</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 flex items-center gap-1">
-                          <span className="text-gray-400">=</span>
-                          <span>{isExampleTask ? task.priority : task.priority}</span>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                          {isExampleTask ? "—" : task.dueDate}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <TasksTable
+              tasks={tasksData}
+              onTaskComplete={handleTaskComplete}
+              onTaskClick={(task) => {
+                setSelectedTask(task as ExampleTask)
+                setShowHintModal(true)
+              }}
+            />
           )}
         </div>
       </div>

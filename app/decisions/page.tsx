@@ -9,6 +9,9 @@ import { CategoryWizard } from "@/components/category-wizard"
 import { FlowStartModal } from "@/components/flow-start-modal"
 import { GuidedTour } from "@/components/guided-tour"
 import { LearnByDoingFeedback } from "@/components/learn-by-doing-feedback"
+import { DecisionsEmptyState } from "@/components/decisions-empty-state"
+import { CategoryWalkthrough } from "@/components/category-walkthrough"
+import { CategoryAhaMoment } from "@/components/category-aha-moment"
 import {
   Plus,
   Search,
@@ -23,29 +26,36 @@ import {
   Briefcase,
   Scale,
   Utensils,
+  UtensilsCrossed,
   UserCircle,
+  UserCheck,
   Calculator,
+  Calendar,
+  Plane,
+  Folder,
   Columns3,
   Share2,
   ChevronRight,
 } from "lucide-react"
 
-const categories = [
-  { id: "all", name: "All decisions", count: 99, icon: Workflow },
-  { id: "budget", name: "Budget", count: 99, icon: DollarSign },
-  { id: "philanthropy", name: "Philanthropy", count: 124, icon: Users },
-  { id: "investment", name: "Investment", count: 16, icon: Briefcase },
-  { id: "travel", name: "Travel", count: 0, icon: FileText },
-  { id: "legal", name: "Legal", count: 2, icon: Scale },
-  { id: "travel2", name: "Travel", count: 8, icon: FileText },
-  { id: "food", name: "Food", count: 15, icon: Utensils },
-  { id: "hr", name: "HR", count: 6, icon: UserCircle },
-  { id: "accounting", name: "Accounting", count: 33, icon: Calculator },
-]
+// Icon mapping for categories
+const iconMap: Record<string, any> = {
+  Folder: Folder,
+  FileText: FileText,
+  Users: Users,
+  Calendar: Calendar,
+  DollarSign: DollarSign,
+  Scale: Scale,
+  Plane: Plane,
+  UtensilsCrossed: Utensils,
+  UserCheck: UserCircle,
+  Calculator: Calculator,
+}
 
 export default function DecisionsPage() {
   const router = useRouter()
-  const [selectedCategory, setSelectedCategory] = useState("travel")
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; count: number; icon: any }>>([])
   const [walkthroughStep, setWalkthroughStep] = useState(0)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showCategoryWizard, setShowCategoryWizard] = useState(false)
@@ -55,12 +65,61 @@ export default function DecisionsPage() {
   const [showCategoryIntro, setShowCategoryIntro] = useState(false)
   const [showCategoryTour, setShowCategoryTour] = useState(false)
   const newCategoryBtnRef = useRef<HTMLButtonElement | null>(null)
+  const [showCategoryWalkthrough, setShowCategoryWalkthrough] = useState(false)
+  const [showAhaMoment, setShowAhaMoment] = useState(false)
+
+  // Load categories from localStorage on mount and when updated
+  useEffect(() => {
+    const loadCategories = () => {
+      try {
+        const savedCategories = localStorage.getItem("way2b1_categories")
+        if (savedCategories) {
+          const parsed = JSON.parse(savedCategories)
+          const loaded = parsed.map((cat: any) => ({
+            ...cat,
+            icon: iconMap[cat.iconName] || Folder,
+          }))
+          setCategories(loaded)
+        }
+      } catch (e) {
+        console.error("Failed to load categories", e)
+      }
+    }
+    loadCategories()
+
+    // Listen for category updates
+    const handleCategoriesUpdate = () => {
+      loadCategories()
+    }
+    window.addEventListener("categoriesUpdated", handleCategoriesUpdate)
+    return () => {
+      window.removeEventListener("categoriesUpdated", handleCategoriesUpdate)
+    }
+  }, [])
 
   useEffect(() => {
     const activeModule = localStorage.getItem("way2b1_active_module")
     if (activeModule === "first-decision") {
       setWalkthroughStep(1)
     }
+    // Check if we need to show Category Hotspot (from checklist)
+    const shouldHighlight = localStorage.getItem("way2b1_highlight_new_category") === "true"
+    if (shouldHighlight) {
+      localStorage.removeItem("way2b1_highlight_new_category")
+      // Remove category flow flag if it exists to prevent showing FlowStartModal
+      localStorage.removeItem("way2b1_start_category_flow")
+      // Show walkthrough after a short delay to ensure page is loaded
+      setTimeout(() => {
+        setShowCategoryWalkthrough(true)
+        // Auto-scroll to button after a short delay
+        setTimeout(() => {
+          newCategoryBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+        }, 500)
+      }, 500)
+      return
+    }
+    
+    // Legacy flow - only show FlowStartModal if not coming from checklist
     const shouldStart = localStorage.getItem("way2b1_start_category_flow")
     if (shouldStart) {
       setShowCategoryIntro(true)
@@ -74,6 +133,8 @@ export default function DecisionsPage() {
 
   const handleNewCategory = () => {
     setShowCategoryWizard(true)
+    // Keep walkthrough open when wizard opens
+    // Walkthrough will handle navigation between steps inside wizard
   }
 
   const [showFeedback, setShowFeedback] = useState(false)
@@ -161,31 +222,61 @@ export default function DecisionsPage() {
             {/* Left Sidebar - Categories */}
             <div className="w-72 border-r border-border bg-card p-4">
               <div className="space-y-1">
-                {categories.map((category) => {
-                  const Icon = category.icon
-                  const isSelected = selectedCategory === category.id
-                  return (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                        isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-secondary"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Icon className="w-4 h-4" />
-                        <span>{category.name}</span>
-                      </div>
-                      <span className={`text-xs ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
-                        {category.count}
-                      </span>
-                    </button>
-                  )
-                })}
+                {/* Always show "All decisions" tab */}
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                    selectedCategory === null ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Workflow className="w-4 h-4" />
+                    <span>All decisions</span>
+                  </div>
+                  <span className={`text-xs ${selectedCategory === null ? "text-primary" : "text-muted-foreground"}`}>
+                    0
+                  </span>
+                </button>
+
+                {/* Show categories if they exist */}
+                {categories.length > 0 && (
+                  <>
+                    {categories.map((category) => {
+                      const Icon = category.icon
+                      const isSelected = selectedCategory === category.id
+                      return (
+                        <button
+                          key={category.id}
+                          onClick={() => setSelectedCategory(category.id)}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                            isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-secondary"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon className="w-4 h-4" />
+                            <span>{category.name}</span>
+                          </div>
+                          <span className={`text-xs ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                            {category.count}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </>
+                )}
               </div>
-              <button ref={newCategoryBtnRef} onClick={handleNewCategory} className="w-full flex items-center gap-2 px-3 py-2 mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              
+              <button 
+                id="btn-new-category"
+                ref={newCategoryBtnRef} 
+                onClick={() => {
+                  // Don't close walkthrough - it will auto-advance after modal opens
+                  handleNewCategory()
+                }} 
+                className="w-full flex items-center gap-2 px-3 py-2 mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <Plus className="w-4 h-4" />
-                New category
+                <span>New category</span>
               </button>
             </div>
 
@@ -270,25 +361,7 @@ export default function DecisionsPage() {
               </div>
 
               {/* Empty State */}
-              <div className="flex-1 flex items-center justify-center p-12">
-                <div className="text-center max-w-md">
-                  <div className="w-16 h-16 bg-secondary rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <Workflow className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No records to show</h3>
-                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                    Add new records or import data to get started. Try adjusting your filters or search settings if
-                    you're expecting to see something specific.
-                  </p>
-                  <button
-                    onClick={handleCreateClick}
-                    className="inline-flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#4F7CFF]/90 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    New decision
-                  </button>
-                </div>
-              </div>
+              <DecisionsEmptyState onCreateDecision={handleCreateClick} />
 
               {/* Footer */}
               <div className="border-t border-border bg-card px-6 py-3">
@@ -302,20 +375,67 @@ export default function DecisionsPage() {
         </main>
       </div>
 
+      {/* Category Walkthrough - works both on page and inside wizard modal */}
+      {showCategoryWalkthrough && (
+        <CategoryWalkthrough
+          onClose={() => {
+            setShowCategoryWalkthrough(false)
+          }}
+          onComplete={() => {
+            setShowCategoryWalkthrough(false)
+          }}
+        />
+      )}
+
       {/* Category Wizard */}
       {showCategoryWizard && (
         <CategoryWizard
-          onClose={() => setShowCategoryWizard(false)}
+          onClose={() => {
+            setShowCategoryWizard(false)
+            setShowCategoryWalkthrough(false)
+          }}
           onComplete={(cat) => {
             setShowCategoryWizard(false)
+            setShowCategoryWalkthrough(false)
             setPrefilledCategory(cat.name)
-            try {
-              const progress = JSON.parse(localStorage.getItem("way2b1_module_progress") || "{}")
-              progress["create-category"] = true
-              localStorage.setItem("way2b1_module_progress", JSON.stringify(progress))
-              window.dispatchEvent(new CustomEvent("onboardingProgressUpdate"))
-            } catch {}
-            setShowCreateModal(true)
+            // Reload categories to show the new one
+            const loadCategories = () => {
+              try {
+                const savedCategories = localStorage.getItem("way2b1_categories")
+                if (savedCategories) {
+                  const parsed = JSON.parse(savedCategories)
+                  const loaded = parsed.map((c: any) => ({
+                    ...c,
+                    icon: iconMap[c.iconName] || Folder,
+                  }))
+                  setCategories(loaded)
+                }
+              } catch (e) {
+                console.error("Failed to load categories", e)
+              }
+            }
+            loadCategories()
+            // Show AHA moment after category creation
+            setTimeout(() => {
+              setShowAhaMoment(true)
+            }, 500)
+          }}
+        />
+      )}
+
+      {/* AHA Moment - shows after category creation */}
+      {showAhaMoment && (
+        <CategoryAhaMoment
+          show={true}
+          onClose={() => {
+            setShowAhaMoment(false)
+            // Navigate to dashboard after closing
+            setTimeout(() => {
+              router.push("/")
+            }, 300)
+          }}
+          onNext={() => {
+            // Navigate to Create teams will be handled in CategoryAhaMoment
           }}
         />
       )}

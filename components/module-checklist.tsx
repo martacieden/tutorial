@@ -3,7 +3,8 @@
 import type React from "react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import { CheckCircle2, Circle, Users, FileText, Workflow, Shield, ChevronRight, Clock, Sparkles, Building2, FolderTree, ClipboardList, PlugZap } from "lucide-react"
+import { Sparkles, FolderTree, Users, ClipboardList, PlugZap, Shield } from "lucide-react"
+import { ModuleChecklistItem } from "./module-checklist-item"
 
 interface Module {
   id: string
@@ -104,40 +105,28 @@ export function ModuleChecklist() {
   const router = useRouter()
   const [modules, setModules] = useState<Module[]>([
     {
-      id: "org-setup",
-      title: "Create an organization",
-      description: "Name, type, timezone, currency, language, branding",
-      icon: <Building2 className="w-5 h-5" />,
-      completed: false,
-      emptyStateTitle: "No organization configured",
-      emptyStateDescription: "Set up the foundation for your workspace: organization profile and branding",
-      actionLabel: "Open settings",
-      route: "/more/organization",
-      estimatedTime: "3 min",
-    },
-    {
-      id: "add-team-member",
-      title: "Invite key users",
-      description: "CEO/Principal, CFO/Accountant, Ops Manager, EA",
-      icon: <Users className="w-5 h-5" />,
-      completed: false,
-      emptyStateTitle: "No teammates invited",
-      emptyStateDescription: "Invite the core team so you can assign roles and approvals",
-      actionLabel: "Invite team",
-      route: "/team",
-      estimatedTime: "2 min",
-    },
-    {
       id: "setup-domains",
-      title: "Create base domains",
-      description: "Properties, Vehicles, Financial/Bank Accounts, Legal/Documents",
+      title: "Create base category",
+      description: "Categories in domains, decisions, tasks",
       icon: <FolderTree className="w-5 h-5" />,
       completed: false,
-      emptyStateTitle: "No domain structure",
-      emptyStateDescription: "Create folders/categories to organize assets and documents",
-      actionLabel: "Open catalog",
-      route: "/catalog",
+      emptyStateTitle: "No category structure",
+      emptyStateDescription: "Create categories in domains, decisions, and tasks to organize your workspace",
+      actionLabel: "Create category",
+      route: "/decisions",
       estimatedTime: "3 min",
+    },
+    {
+      id: "create-teams",
+      title: "Create teams",
+      description: "Set up team structure and groups",
+      icon: <Users className="w-5 h-5" />,
+      completed: false,
+      emptyStateTitle: "No teams created",
+      emptyStateDescription: "Create teams to organize your team members and assign permissions",
+      actionLabel: "Create team",
+      route: "/team",
+      estimatedTime: "2 min",
     },
     {
       id: "add-demo-items",
@@ -147,7 +136,7 @@ export function ModuleChecklist() {
       completed: false,
       emptyStateTitle: "No demo content",
       emptyStateDescription: "Create a sample decision and task, add a property and a key document",
-      actionLabel: "Create samples",
+      actionLabel: "Add item",
       route: "/decisions",
       estimatedTime: "4 min",
     },
@@ -159,9 +148,21 @@ export function ModuleChecklist() {
       completed: false,
       emptyStateTitle: "No integrations connected",
       emptyStateDescription: "Connect finance, storage and calendar tools to streamline workflows",
-      actionLabel: "Open integrations",
+      actionLabel: "Connect",
       route: "/resources",
       estimatedTime: "3 min",
+    },
+    {
+      id: "add-team-member",
+      title: "Invite key users",
+      description: "CEO/Principal, CFO/Accountant, Ops Manager, EA",
+      icon: <Users className="w-5 h-5" />,
+      completed: false,
+      emptyStateTitle: "No teammates invited",
+      emptyStateDescription: "Invite the core team and add them to your teams",
+      actionLabel: "Invite",
+      route: "/team",
+      estimatedTime: "2 min",
     },
     {
       id: "configure-compliance",
@@ -171,13 +172,12 @@ export function ModuleChecklist() {
       completed: false,
       emptyStateTitle: "Compliance not configured",
       emptyStateDescription: "Enable compliance tracking to keep audit logs and generate reports",
-      actionLabel: "Get started",
+      actionLabel: "Set up",
       route: "/compliance",
       estimatedTime: "2 min",
     },
   ])
 
-  const [expandedModule, setExpandedModule] = useState<string | null>(null)
   const [showProgressAnimation, setShowProgressAnimation] = useState(false)
   const [showCompletionModal, setShowCompletionModal] = useState(false)
   const [checklistHidden, setChecklistHidden] = useState(false)
@@ -190,12 +190,27 @@ export function ModuleChecklist() {
         setModules((prev) =>
           prev.map((module) => ({
             ...module,
-            completed: progress[module.id] || false,
+            completed: progress[module.id] === true ? true : false, // Explicitly check for true
           })),
         )
       } catch (e) {
         console.error("Failed to load module progress", e)
+        // On error, ensure all modules are uncompleted
+        setModules((prev) =>
+          prev.map((module) => ({
+            ...module,
+            completed: false,
+          })),
+        )
       }
+    } else {
+      // If no saved progress, ensure all modules are uncompleted
+      setModules((prev) =>
+        prev.map((module) => ({
+          ...module,
+          completed: false,
+        })),
+      )
     }
   }, [])
 
@@ -241,8 +256,26 @@ export function ModuleChecklist() {
     })
   }
 
-  const handleModuleClick = (moduleId: string) => {
-    setExpandedModule(expandedModule === moduleId ? null : moduleId)
+  const handleResetModule = (moduleId: string) => {
+    setModules((prev) => {
+      const updated = prev.map((module) =>
+        module.id === moduleId ? { ...module, completed: false } : module,
+      )
+
+      const progress = updated.reduce(
+        (acc, module) => ({
+          ...acc,
+          [module.id]: module.completed,
+        }),
+        {},
+      )
+      localStorage.setItem("way2b1_module_progress", JSON.stringify(progress))
+
+      // Dispatch custom event to notify OnboardingProgressBadge
+      setTimeout(() => window.dispatchEvent(new CustomEvent("onboardingProgressUpdate")), 0)
+
+      return updated
+    })
   }
 
   const handleActionClick = (route: string, moduleId: string) => {
@@ -252,22 +285,22 @@ export function ModuleChecklist() {
         localStorage.setItem("way2b1_start_category_flow", "true")
       } catch {}
     }
-    if (moduleId === "org-setup") {
-      // Start walkthrough directly
-      localStorage.setItem("way2b1_start_org_walkthrough", "true")
-      router.push("/more/organization")
+    if (moduleId === "create-teams") {
+      // Start walkthrough for creating teams
+      localStorage.setItem("way2b1_start_team_walkthrough", "true")
+      router.push("/team")
       return
     }
     if (moduleId === "add-team-member") {
-      // Start walkthrough directly
+      // Start walkthrough directly for inviting users
       localStorage.setItem("way2b1_start_team_walkthrough", "true")
       router.push("/team")
       return
     }
     if (moduleId === "setup-domains") {
-      // Start hints for catalog page
-      localStorage.setItem("way2b1_start_domains_walkthrough", "true")
-      router.push("/catalog")
+      // Redirect to decisions page and highlight New Category button with hotspot
+      localStorage.setItem("way2b1_highlight_new_category", "true")
+      router.push("/decisions")
       return
     }
     router.push(route)
@@ -296,8 +329,8 @@ export function ModuleChecklist() {
         setChecklistHidden(true)
       }} />
 
-      <div className="bg-card rounded-xl p-6">
-        <div className="mb-6">
+      <div className="bg-card rounded-xl">
+        <div className="px-0 pt-6 pb-4">
           <div className="flex items-center justify-between gap-4">
             <h3 className="text-lg font-semibold text-foreground">Family Office Setup</h3>
             <div className="flex items-center gap-3 flex-1 max-w-md">
@@ -314,86 +347,19 @@ export function ModuleChecklist() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {modules.map((module) => (
-            <div key={module.id} className="border border-border rounded-lg overflow-hidden transition-all">
-              <div
-                className="flex items-center gap-3 p-4 hover:bg-secondary/50 transition-colors cursor-pointer"
-                onClick={() => handleModuleClick(module.id)}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    toggleModule(module.id)
-                  }}
-                  className="flex-shrink-0 transition-transform hover:scale-110"
-                >
-                  {module.completed ? (
-                    <CheckCircle2 className="w-6 h-6 text-emerald-500 fill-emerald-50" />
-                  ) : (
-                    <Circle className="w-6 h-6 text-gray-300" />
-                  )}
-                </button>
-
-                <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                  {module.icon}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div
-                    className={`font-medium ${module.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
-                  >
-                    {module.title}
-                  </div>
-                  <div className="text-sm text-muted-foreground">{module.description}</div>
-                </div>
-
-                {!module.completed && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-full text-xs font-medium text-primary">
-                    <Clock className="w-3.5 h-3.5" />
-                    {module.estimatedTime}
-                  </div>
-                )}
-
-                <ChevronRight
-                  className={`w-5 h-5 text-muted-foreground transition-transform ${
-                    expandedModule === module.id ? "rotate-90" : ""
-                  }`}
-                />
-              </div>
-
-              {expandedModule === module.id && !module.completed && (
-                <div className="border-t border-border bg-secondary/30 p-6 animate-in slide-in-from-top-2 duration-200">
-                  <div className="flex flex-col items-center text-center max-w-md mx-auto">
-                    <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4 text-muted-foreground">
-                      {module.icon}
-                    </div>
-                    <h4 className="text-lg font-semibold text-foreground mb-2">{module.emptyStateTitle}</h4>
-                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{module.emptyStateDescription}</p>
-                    <button
-                      onClick={() => handleActionClick(module.route, module.id)}
-                      className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      {module.actionLabel}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {expandedModule === module.id && module.completed && (
-                <div className="border-t border-border bg-accent/5 p-6 animate-in slide-in-from-top-2 duration-200">
-                  <div className="flex items-center justify-center gap-2 text-accent">
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span className="font-medium">Task completed!</span>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ModuleChecklistItem
+              key={module.id}
+              module={module}
+              onActionClick={handleActionClick}
+              onResetClick={handleResetModule}
+            />
           ))}
         </div>
 
         {allCompleted && (
-          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200 rounded-lg">
+          <div className="mx-6 mb-6 mt-6 p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200 rounded-lg">
             <div className="flex items-center gap-3">
               <div className="text-3xl">🎉</div>
               <div>
