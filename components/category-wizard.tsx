@@ -182,16 +182,16 @@ export function CategoryWizard({ onClose, onComplete }: { onClose: () => void; o
                       <div className="w-px h-6 bg-gray-300"></div>
                     </div>
                   )}
-                </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
+            </div>
 
           {/* Main Content */}
           <div className="flex-1 px-8 py-8 flex flex-col overflow-y-auto overflow-x-hidden" style={{ width: "calc(728px - 200px)" }}>
-            {step === 1 && (
+              {step === 1 && (
               <div className="space-y-6" id="category-wizard-step-1">
-                <div>
+                  <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Enter category details</h3>
                   <p className="text-[16px] text-gray-500 leading-relaxed">Enter a name and select the appropriate category type.</p>
                 </div>
@@ -398,7 +398,7 @@ export function CategoryWizard({ onClose, onComplete }: { onClose: () => void; o
                           What should happen when this decision is approved?
                         </h6>
                         <div className="space-y-4">
-                          <div>
+                  <div>
                             <label className="flex items-start gap-3 cursor-pointer" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-center w-5 h-5 mt-0.5">
                                 <div
@@ -533,7 +533,7 @@ export function CategoryWizard({ onClose, onComplete }: { onClose: () => void; o
                               <div className="text-[14px] text-gray-900 font-medium">Create new budget</div>
                               <div className="text-[14px] text-gray-600">Upon approval, a new budget is created</div>
                             </div>
-                          </label>
+                      </label>
                           <label className="flex items-start gap-3 cursor-pointer" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-center w-5 h-5 mt-0.5">
                               <div
@@ -560,7 +560,7 @@ export function CategoryWizard({ onClose, onComplete }: { onClose: () => void; o
                               <div className="text-[14px] text-gray-900 font-medium">Spend from existing budget</div>
                               <div className="text-[14px] text-gray-600">Upon approval, amount deducted from selected budget</div>
                             </div>
-                          </label>
+                      </label>
 
                           {/* Dropdown for Spend from existing budget */}
                           {draft.trackAmountsSettings === "spend-from-budget" && (
@@ -698,10 +698,10 @@ export function CategoryWizard({ onClose, onComplete }: { onClose: () => void; o
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+                </div>
+              )}
 
-            {step === 3 && (
+              {step === 3 && (
               <div className="space-y-3" id="category-wizard-step-3">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-xl font-semibold text-gray-900">Set up custom fields</h3>
@@ -775,9 +775,9 @@ export function CategoryWizard({ onClose, onComplete }: { onClose: () => void; o
                   </button>
                 </div>
               </div>
-            )}
+              )}
 
-            {step === 4 && (
+              {step === 4 && (
               <div className="space-y-4" id="category-wizard-step-4">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Workflow configuration</h3>
@@ -999,13 +999,13 @@ export function CategoryWizard({ onClose, onComplete }: { onClose: () => void; o
                           </div>
                         </div>
                       )}
-                    </div>
+                  </div>
                   </label>
                 </div>
-              </div>
-            )}
+                </div>
+              )}
           </div>
-        </div>
+            </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between px-8 py-6 border-t border-gray-200">
@@ -1034,7 +1034,7 @@ export function CategoryWizard({ onClose, onComplete }: { onClose: () => void; o
               }`}
             >
               {step === 4 ? "Create" : "Continue"}
-            </button>
+                </button>
           </div>
         </div>
       </div>

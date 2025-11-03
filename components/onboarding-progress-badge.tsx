@@ -35,7 +35,7 @@ const DEFAULT_MODULES: Module[] = [
     icon: <Users className="w-4 h-4" />,
     completed: false,
     route: "/team",
-    buttonLabel: "Create teams",
+    buttonLabel: "Create team",
   },
   {
     id: "add-demo-items",
@@ -44,7 +44,7 @@ const DEFAULT_MODULES: Module[] = [
     icon: <ClipboardList className="w-4 h-4" />,
     completed: false,
     route: "/decisions",
-    buttonLabel: "Create samples",
+    buttonLabel: "Add item",
   },
   {
     id: "connect-integrations",
@@ -53,7 +53,7 @@ const DEFAULT_MODULES: Module[] = [
     icon: <PlugZap className="w-4 h-4" />,
     completed: false,
     route: "/resources",
-    buttonLabel: "Open integrations",
+    buttonLabel: "Connect",
   },
   {
     id: "add-team-member",
@@ -62,16 +62,16 @@ const DEFAULT_MODULES: Module[] = [
     icon: <Users className="w-4 h-4" />,
     completed: false,
     route: "/team",
-    buttonLabel: "Invite team",
+    buttonLabel: "Invite",
   },
   {
     id: "configure-compliance",
     title: "Set up compliance tracking",
-    description: "Enable audit trail and reporting",
+    description: "Enable audit trail and regulatory reporting",
     icon: <Shield className="w-4 h-4" />,
     completed: false,
     route: "/compliance",
-    buttonLabel: "Get Started",
+    buttonLabel: "Set up",
   },
 ]
 

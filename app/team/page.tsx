@@ -6,14 +6,31 @@ import { Sidebar } from "@/components/sidebar"
 import { Topbar } from "@/components/topbar"
 import { Users, Plus, Mail, Search, X } from "lucide-react"
 import { TeamWalkthrough } from "@/components/team-walkthrough"
+import { TeamCreationWalkthrough } from "@/components/team-creation-walkthrough"
+import { TeamCreationModal } from "@/components/team-creation-modal"
+import { TeamsTable } from "@/components/teams-table"
 import { useRef } from "react"
+
+interface Team {
+  id: string
+  name: string
+  organization: string
+  members: Array<{ id: string; name: string; avatar?: string }>
+  createdAt: string
+  createdBy?: { name: string; avatar?: string }
+}
 
 export default function TeamPage() {
   const router = useRouter()
   const [hasTeamMembers, setHasTeamMembers] = useState(false)
+  const [hasTeams, setHasTeams] = useState(false)
+  const [teams, setTeams] = useState<Team[]>([])
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showTeamCreationModal, setShowTeamCreationModal] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [showWalkthrough, setShowWalkthrough] = useState(false)
+  const [showTeamCreationWalkthrough, setShowTeamCreationWalkthrough] = useState(false)
+  const newTeamBtnRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
     // Check if walkthrough should be shown
@@ -25,17 +42,57 @@ export default function TeamPage() {
       try {
         const parsed = JSON.parse(progress)
         setHasTeamMembers(parsed["add-team-member"] || false)
+        setHasTeams(parsed["create-teams"] || false)
       } catch (e) {
         console.error("Failed to load progress", e)
       }
     }
 
-    if ((activeModule === "add-team-member" || activeModule === "create-teams") && shouldShowWalkthrough) {
-      // Small delay for page to load
+    // Load teams from localStorage
+    const loadTeams = () => {
+      try {
+        const savedTeams = localStorage.getItem("way2b1_teams")
+        if (savedTeams) {
+          const parsed = JSON.parse(savedTeams)
+          setTeams(parsed)
+          setHasTeams(parsed.length > 0)
+        }
+      } catch (e) {
+        console.error("Failed to load teams", e)
+      }
+    }
+
+    loadTeams()
+
+    // Show team creation walkthrough for create-teams module
+    if (activeModule === "create-teams" && shouldShowWalkthrough) {
+      setTimeout(() => {
+        setShowTeamCreationWalkthrough(true)
+        localStorage.removeItem("way2b1_start_team_walkthrough")
+        // Auto-scroll to button after a short delay
+        setTimeout(() => {
+          newTeamBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+        }, 500)
+      }, 500)
+    }
+
+    // Listen for teams updates
+    const handleTeamsUpdate = () => {
+      loadTeams()
+    }
+
+    window.addEventListener("teamsUpdated", handleTeamsUpdate)
+
+    // Show team walkthrough for add-team-member module
+    if (activeModule === "add-team-member" && shouldShowWalkthrough) {
       setTimeout(() => {
         setShowWalkthrough(true)
         localStorage.removeItem("way2b1_start_team_walkthrough")
       }, 300)
+    }
+
+    return () => {
+      window.removeEventListener("teamsUpdated", handleTeamsUpdate)
     }
   }, [])
 
@@ -73,73 +130,69 @@ export default function TeamPage() {
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Team</h1>
-                <p className="text-muted-foreground">Manage team members and their access</p>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Teams</h1>
+                <p className="text-muted-foreground">Manage teams and their members</p>
               </div>
-              {hasTeamMembers && (
+              {hasTeams && (
                 <button
-                  onClick={() => setShowInviteModal(true)}
+                  onClick={() => setShowTeamCreationModal(true)}
                   className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  Invite user
+                  New team
                 </button>
               )}
             </div>
 
-            {!hasTeamMembers ? (
+            {/* Filters and Search */}
+            {hasTeams && (
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                  <Search className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="bg-transparent border-0 outline-none text-sm text-gray-900 placeholder-gray-400 w-48"
+                  />
+                </div>
+                <button className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  Filters
+                </button>
+              </div>
+            )}
+
+            {!hasTeams ? (
               <div className="bg-card border border-border rounded-xl p-12 flex flex-col items-center text-center">
                 <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                   <Users className="w-10 h-10 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground mb-3">Team is empty</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-3">Create your first team</h2>
                 <p className="text-foreground/70 mb-8 max-w-md leading-relaxed">
-                  Add team members to start collaborating on decisions together. Invite colleagues via email and set up
-                  their roles and permissions.
+                  Teams help you organize people and manage permissions across your organization. Group members by department, project, or function to streamline collaboration.
                 </p>
 
                 <button
-                  id="btn-invite-first"
-                  onClick={handleInviteClick}
+                  id="btn-new-team"
+                  ref={newTeamBtnRef}
+                  onClick={() => {
+                    setShowTeamCreationModal(true)
+                  }}
                   className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
                 >
-                  <Mail className="w-5 h-5" />
-                  Invite first user
+                  <Plus className="w-5 h-5" />
+                  New team
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Search team members..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-secondary border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                <div className="bg-card border border-border rounded-xl overflow-hidden">
-                  <div className="p-6 border-b border-border flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-lg text-primary-foreground font-semibold">
-                        JD
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">John Doe</h3>
-                        <p className="text-sm text-muted-foreground">john.doe@example.com</p>
-                      </div>
+              <div>
+                {teams.length > 0 ? (
+                  <>
+                    <TeamsTable teams={teams} />
+                    <div className="mt-4 text-sm text-gray-500">
+                      Rows: {teams.length} Filtered: 0
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 bg-accent/10 text-accent text-sm font-medium rounded-full">Admin</span>
-                      <span className="px-3 py-1 bg-secondary text-muted-foreground text-sm rounded-full">Active</span>
-                    </div>
-                  </div>
-                  <div className="p-6 bg-secondary/30">
-                    <p className="text-sm text-muted-foreground">
-                      First team member successfully added! Now you can invite more colleagues to collaborate.
-                    </p>
-                  </div>
-                </div>
+                  </>
+                ) : null}
               </div>
             )}
           </div>
@@ -150,6 +203,40 @@ export default function TeamPage() {
         <InviteModal
           onSave={handleAddMember}
           onClose={() => setShowInviteModal(false)}
+        />
+      )}
+
+      {/* Team Creation Modal */}
+      {showTeamCreationModal && (
+        <TeamCreationModal
+          onClose={() => {
+            setShowTeamCreationModal(false)
+            setShowTeamCreationWalkthrough(false)
+          }}
+          onComplete={(team) => {
+            setShowTeamCreationModal(false)
+            setShowTeamCreationWalkthrough(false)
+            // Teams will be loaded from localStorage via event listener
+            setHasTeams(true)
+            // Show success toast
+            setShowToast(true)
+            // Don't redirect, stay on page to see the created team in table
+            setTimeout(() => {
+              setShowToast(false)
+            }, 3000)
+          }}
+        />
+      )}
+
+      {/* Team Creation Walkthrough */}
+      {showTeamCreationWalkthrough && (
+        <TeamCreationWalkthrough
+          onClose={() => {
+            setShowTeamCreationWalkthrough(false)
+          }}
+          onComplete={() => {
+            setShowTeamCreationWalkthrough(false)
+          }}
         />
       )}
 

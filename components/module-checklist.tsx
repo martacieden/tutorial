@@ -183,35 +183,23 @@ export function ModuleChecklist() {
   const [checklistHidden, setChecklistHidden] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem("way2b1_module_progress")
-    if (saved) {
-      try {
-        const progress = JSON.parse(saved)
-        setModules((prev) =>
-          prev.map((module) => ({
-            ...module,
-            completed: progress[module.id] === true ? true : false, // Explicitly check for true
-          })),
-        )
-      } catch (e) {
-        console.error("Failed to load module progress", e)
-        // On error, ensure all modules are uncompleted
-        setModules((prev) =>
-          prev.map((module) => ({
-            ...module,
-            completed: false,
-          })),
-        )
-      }
-    } else {
-      // If no saved progress, ensure all modules are uncompleted
-      setModules((prev) =>
-        prev.map((module) => ({
-          ...module,
-          completed: false,
-        })),
-      )
-    }
+    // Always start with all modules uncompleted (reset on every page load)
+    // Clear saved progress FIRST before setting state to ensure clean start
+    localStorage.removeItem("way2b1_module_progress")
+    localStorage.removeItem("way2b1_onboarding_completed")
+    localStorage.removeItem("way2b1_checklist_initialized")
+    localStorage.removeItem("way2b1_last_completed_module")
+    
+    // Force all modules to be uncompleted
+    setModules((prev) =>
+      prev.map((module) => ({
+        ...module,
+        completed: false,
+      })),
+    )
+    
+    // Dispatch event to update progress badge after clearing
+    setTimeout(() => window.dispatchEvent(new CustomEvent("onboardingProgressUpdate")), 0)
   }, [])
 
   useEffect(() => {

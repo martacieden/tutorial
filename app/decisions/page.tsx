@@ -241,27 +241,27 @@ export default function DecisionsPage() {
                 {/* Show categories if they exist */}
                 {categories.length > 0 && (
                   <>
-                    {categories.map((category) => {
-                      const Icon = category.icon
-                      const isSelected = selectedCategory === category.id
-                      return (
-                        <button
-                          key={category.id}
-                          onClick={() => setSelectedCategory(category.id)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                            isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-secondary"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon className="w-4 h-4" />
-                            <span>{category.name}</span>
-                          </div>
-                          <span className={`text-xs ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
-                            {category.count}
-                          </span>
-                        </button>
-                      )
-                    })}
+                {categories.map((category) => {
+                  const Icon = category.icon
+                  const isSelected = selectedCategory === category.id
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon className="w-4 h-4" />
+                        <span>{category.name}</span>
+                      </div>
+                      <span className={`text-xs ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                        {category.count}
+                      </span>
+                    </button>
+                  )
+                })}
                   </>
                 )}
               </div>

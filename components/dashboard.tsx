@@ -155,9 +155,9 @@ export function Dashboard() {
               tasks={tasksData}
               onTaskComplete={handleTaskComplete}
               onTaskClick={(task) => {
-                setSelectedTask(task as ExampleTask)
-                setShowHintModal(true)
-              }}
+                                    setSelectedTask(task as ExampleTask)
+                                    setShowHintModal(true)
+                                  }}
             />
           )}
         </div>
